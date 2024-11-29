@@ -24,9 +24,24 @@ try:
         servers = json.load(servers_file)
 except FileNotFoundError:
     servers = []
+    
+# Cargar contador de visitas desde visit_counter.json
+try:
+    with open('visit_counter.json') as counter_file:
+        visit_counter_data = json.load(counter_file)
+        visit_counter = visit_counter_data['visit_counter']
+except FileNotFoundError:
+    visit_counter = 0
+
+def save_visit_counter():
+    with open('visit_counter.json', 'w') as counter_file:
+        json.dump({'visit_counter': visit_counter}, counter_file)    
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global visit_counter
+    visit_counter += 1  # Incrementar el contador de visitas
+    save_visit_counter()  # Guardar el contador de visitas en el archivo
     resultados = []
     imagen_producto = ""
     descripcion_producto = ""
@@ -71,7 +86,7 @@ def index():
                 resultados_sql = get_product_info_sql(server['ip'], ean, server['alias'])
                 resultados.extend(resultados_sql)
     
-    return render_template('index.html', resultados=resultados, imagen_producto=imagen_producto, descripcion_producto=descripcion_producto, precio_referencia=precio_referencia)
+    return render_template('index.html', resultados=resultados, imagen_producto=imagen_producto, descripcion_producto=descripcion_producto, precio_referencia=precio_referencia, visit_counter=visit_counter)
 
 @app.route('/config', methods=['GET', 'POST'])
 def config():
