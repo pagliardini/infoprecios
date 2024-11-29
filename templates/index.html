@@ -7,42 +7,67 @@
     <!-- Incluir Materialize CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
 </head>
+<style>
+    .precio_referencia {
+        font-size: 1em;
+        font-weight: bold;
+    }
+</style>
 <body>
     <div class="container">
         <h1>InfoPrecios</h1>
-        <form action="/" method="post" class="row">
-            <div class="input-field col s9">
-            <label for="ean">Código EAN:</label>
-            <input type="text" id="ean" name="ean" required autocomplete="off">
-            </div>
-            <div class="input-field col s2">
-            <button class="btn waves-effect waves-light right" type="submit">Buscar</button>
+        <form action="/" method="post">
+            <div class="input-field">
+                <label for="ean">Código EAN:</label>
+                <input type="text" id="ean" name="ean" required>
             </div>
         </form>
         {% if resultados %}
-            <table class="striped">
-                <thead>
-                    <tr>
-                        <th>Código EAN</th>
-                        <th>Nombre</th>
-                        <th>Precio</th>
-                        <th>Servidor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for resultado in resultados %}
-                    <tr>
-                        <td>{{ resultado.CodigoEan }}</td>
-                        <td>{{ resultado.Nombre }}</td>
-                        <td>{{ resultado.Precio }}</td>
-                        <td>{{ resultado.Servidor }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="row">
+                <div class="col s12 m9">
+                    <table class="striped">
+                        <thead>
+                            <tr>
+                                <th>Código EAN</th>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Servidor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for resultado in resultados %}
+                            <tr>
+                                <td>{{ resultado.CodigoEan }}</td>
+                                <td>{{ resultado.Nombre }}</td>
+                                <td>{{ resultado.Precio }}</td>
+                                <td>{{ resultado.Servidor }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col s12 m3">
+                    <img src="{{ imagen_producto }}" alt="Imagen del producto" class="responsive-img">
+                    <p>{{ descripcion_producto }}</p>
+                    <p class="precio_referencia">Precio Referencia: {{ precio_referencia }}</p>
+                </div>
+            </div>
         {% endif %}
     </div>
     <!-- Incluir Materialize JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        // Establecer el foco en el campo de entrada al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('ean').focus();
+        });
+
+        // Establecer el foco en el campo de entrada después de enviar el formulario
+        document.querySelector('form').addEventListener('submit', function() {
+            setTimeout(function() {
+                document.getElementById('ean').focus();
+            }, 10);
+        });
+    </script>
 </body>
 </html>

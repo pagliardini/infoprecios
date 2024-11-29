@@ -28,11 +28,14 @@ except FileNotFoundError:
 @app.route('/', methods=['GET', 'POST'])
 def index():
     resultados = []
+    imagen_producto = ""
+    descripcion_producto = ""
+    precio_referencia = ""
     if request.method == 'POST':
         ean = request.form.get('ean')
         if ean:
             # Obtener información de Pricely
-            nombre_pricely, precio_pricely = get_product_info(ean)
+            nombre_pricely, precio_pricely, imagen_producto, descripcion_producto = get_product_info(ean)
             if nombre_pricely and precio_pricely:
                 resultados.append({
                     "CodigoEan": ean,
@@ -40,13 +43,35 @@ def index():
                     "Precio": precio_pricely,
                     "Servidor": "Pricely"
                 })
+                # Imprimir el valor del precio antes de la conversión
+                print(f"Precio de Pricely antes de la conversión: {precio_pricely}")
+        # Eliminar símbolos y ajustar formato
+            try:
+                # Paso 1: Limpia el precio (quita símbolos y espacios)
+                precio_pricely = precio_pricely.strip().replace('$', '').replace('.', '').replace(',', '.')
+
+                # Paso 2: Convierte el precio a número flotante
+                precio_pricely_num = float(precio_pricely)
+
+                # Paso 3: Calcula el precio de referencia (+10%)
+                precio_referencia_num = precio_pricely_num * 1.10
+
+                # Paso 4: Redondea el precio de referencia al múltiplo superior de 50
+                precio_referencia_num = ((precio_referencia_num + 49) // 50) * 50
+
+                # Paso 5: Formatea el precio de referencia
+                precio_referencia = locale.currency(precio_referencia_num, grouping=True)
+            except ValueError as e:
+                print(f"Error al convertir el precio: {e}")
+                precio_referencia = "Error en el cálculo"
+            
             
             # Obtener información de SQL Server
             for server in servers:
                 resultados_sql = get_product_info_sql(server['ip'], ean, server['alias'])
                 resultados.extend(resultados_sql)
     
-    return render_template('index.html', resultados=resultados)
+    return render_template('index.html', resultados=resultados, imagen_producto=imagen_producto, descripcion_producto=descripcion_producto, precio_referencia=precio_referencia)
 
 @app.route('/config', methods=['GET', 'POST'])
 def config():
@@ -132,12 +157,22 @@ def get_product_info(ean):
         )
         precio_promedio = precio_promedio.text.strip() if precio_promedio else "Precio no encontrado"
 
-        return nombre_producto, precio_promedio
+        imagen_producto = soup.select_one(
+            "body > main > div > div.max-w-5xl.w-full.bg-white.p-8.md\:p-4.shadow-xl.mb-8 > div.flex.items-center.md\:flex-row.gap-4.w-full.flex-col.md\:p-4 > div:nth-child(1) > a > div > img"
+        )
+        imagen_producto = imagen_producto['src'] if imagen_producto else ""
+
+        descripcion_producto = soup.select_one(
+            "body > main > div > div.max-w-5xl.w-full.bg-white.p-8.md\:p-4.shadow-xl.mb-8 > div.flex.items-center.md\:flex-row.gap-4.w-full.flex-col.md\:p-4 > div.flex.flex-col.justify-center > div.mb-1.text-zinc-600.text-xs.mt-2"
+        )
+        descripcion_producto = descripcion_producto.text.strip() if descripcion_producto else "Descripción no encontrada"
+
+        return nombre_producto, precio_promedio, imagen_producto, descripcion_producto
 
     except requests.exceptions.RequestException as e:
-        return "Error al conectarse con Pricely", str(e)
+        return "Error al conectarse con Pricely", str(e), "", ""
     except AttributeError:
-        return "No se pudo extraer información del producto.", ""
+        return "No se pudo extraer información del producto.", "", "", ""
 
 def get_product_info_sql(server_ip, ean, alias):
     query = f"""
@@ -148,7 +183,7 @@ def get_product_info_sql(server_ip, ean, alias):
     
     resultados = []
     try:
-        conn = pymssql.connect(server_ip, user, password, database, timeout=1)
+        conn = pymssql.connect(server_ip, user, password, database, timeout=0.2)
         cursor = conn.cursor(as_dict=True)
         cursor.execute(query)
         for row in cursor:
@@ -165,4 +200,4 @@ def get_product_info_sql(server_ip, ean, alias):
     return resultados
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port=5000, debug=True)
