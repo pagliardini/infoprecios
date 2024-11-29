@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfoPrecios</title>
+    <!-- Incluir Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>InfoPrecios</h1>
+        <form action="/" method="post" class="row">
+            <div class="input-field col s9">
+            <label for="ean">Código EAN:</label>
+            <input type="text" id="ean" name="ean" required autocomplete="off">
+            </div>
+            <div class="input-field col s2">
+            <button class="btn waves-effect waves-light right" type="submit">Buscar</button>
+            </div>
+        </form>
+        {% if resultados %}
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th>Código EAN</th>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th>Servidor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resultado in resultados %}
+                    <tr>
+                        <td>{{ resultado.CodigoEan }}</td>
+                        <td>{{ resultado.Nombre }}</td>
+                        <td>{{ resultado.Precio }}</td>
+                        <td>{{ resultado.Servidor }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+    <!-- Incluir Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>
